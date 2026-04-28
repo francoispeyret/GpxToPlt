@@ -2,7 +2,7 @@
 
 Simple and fast macOS converter for turning `.gpx` GPS tracks into OziExplorer-compatible `.plt` files.
 
-![GPX to PLT preview](Web/screenshot.png)
+![GPX to PLT preview](docs/screenshot.png)
 
 ## Why this app?
 
