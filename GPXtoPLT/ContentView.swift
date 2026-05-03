@@ -9,57 +9,63 @@ extension UTType {
 struct ContentView: View {
     @EnvironmentObject var langManager: LanguageManager
 
-    @State private var trackInfo: TrackInfo?
-    @State private var sourceURL: URL?
+    @State private var files: [ConversionFile] = []
+    @State private var outputDir: URL?
     @State private var isTargeted = false
-    @State private var isConverting = false
+    @State private var isBatchConverting = false
     @State private var showPicker = false
-    @State private var status: AppStatus?
+    @State private var globalStatus: GlobalStatus?
 
-    enum AppStatus: Equatable {
-        case success(String)
-        case failure(String)
+    enum GlobalStatus: Equatable {
+        case success(Int)
+        case partial(Int, Int) // convertis, total
         var isSuccess: Bool { if case .success = self { return true }; return false }
     }
 
     private var s: AppStrings { langManager.strings }
+    private var readyCount: Int { files.filter(\.isReady).count }
+    private var canConvert: Bool { readyCount > 0 && !isBatchConverting }
 
     var body: some View {
         VStack(spacing: 0) {
             header
-                .padding(.bottom, 28)
+                .padding(.bottom, 20)
 
             dropZone
+                .animation(.spring(duration: 0.3), value: files.isEmpty)
 
-            if let info = trackInfo {
-                fileInfoCard(info)
+            if !files.isEmpty {
+                fileList
                     .transition(.asymmetric(
                         insertion: .push(from: .top).combined(with: .opacity),
                         removal: .push(from: .bottom).combined(with: .opacity)
                     ))
-                    .padding(.top, 16)
-            }
-
-            if let st = status {
-                statusBadge(st)
-                    .transition(.scale(scale: 0.9).combined(with: .opacity))
                     .padding(.top, 12)
             }
 
-            Spacer(minLength: 20)
+            outputFolderRow
+                .padding(.top, 12)
+
+            if let st = globalStatus {
+                globalStatusBadge(st)
+                    .transition(.scale(scale: 0.9).combined(with: .opacity))
+                    .padding(.top, 10)
+            }
+
+            Spacer(minLength: 16)
             actionBar
         }
-        .padding(28)
-        .frame(width: 500, height: 460)
-        .animation(.spring(duration: 0.3), value: trackInfo != nil)
-        .animation(.spring(duration: 0.25), value: status)
+        .padding(24)
+        .frame(width: 520, height: 560)
+        .animation(.spring(duration: 0.3), value: files.count)
+        .animation(.spring(duration: 0.25), value: globalStatus)
         .fileImporter(
             isPresented: $showPicker,
             allowedContentTypes: [.gpxFile, .xml],
-            allowsMultipleSelection: false
+            allowsMultipleSelection: true
         ) { result in
-            if case .success(let urls) = result, let url = urls.first {
-                loadFile(url: url)
+            if case .success(let urls) = result {
+                addFiles(urls: urls.filter { $0.pathExtension.lowercased() == "gpx" })
             }
         }
         .onDrop(of: [.fileURL], isTargeted: $isTargeted, perform: handleDrop)
@@ -102,103 +108,179 @@ struct ContentView: View {
                 )
                 .animation(.easeInOut(duration: 0.15), value: isTargeted)
 
-            VStack(spacing: 10) {
-                Image(systemName: sourceURL != nil ? "doc.badge.checkmark" : "arrow.down.doc")
-                    .font(.system(size: 36, weight: .light))
-                    .foregroundColor(isTargeted ? .accentColor : .secondary)
+            VStack(spacing: 8) {
+                Image(systemName: files.isEmpty ? "arrow.down.doc" : "doc.on.doc.fill")
+                    .font(.system(size: files.isEmpty ? 36 : 28, weight: .light))
+                    .foregroundColor(isTargeted ? .accentColor : (files.isEmpty ? .secondary : .accentColor))
                     .animation(.easeInOut(duration: 0.15), value: isTargeted)
 
-                if let url = sourceURL {
-                    Text(url.lastPathComponent)
-                        .font(.callout.weight(.medium))
-                        .foregroundStyle(.primary)
-                    Text(s.clickToChange)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                } else {
+                if files.isEmpty {
                     Text(s.dropZoneTitle)
                         .font(.callout.weight(.medium))
                         .foregroundStyle(.primary)
                     Text(s.dropZoneSubtitle)
                         .font(.caption)
                         .foregroundStyle(.tertiary)
+                } else {
+                    Text(String(format: s.filesLoaded, files.count))
+                        .font(.callout.weight(.medium))
+                        .foregroundStyle(.primary)
+                    Text(s.dropMoreFiles)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
             }
         }
-        .frame(height: 148)
+        .frame(height: files.isEmpty ? 148 : 100)
         .contentShape(RoundedRectangle(cornerRadius: 14))
         .onTapGesture { showPicker = true }
     }
 
-    @ViewBuilder
-    private func fileInfoCard(_ info: TrackInfo) -> some View {
-        HStack(spacing: 14) {
-            Image(systemName: "point.3.connected.trianglepath.dotted")
-                .font(.title2)
-                .foregroundColor(.accentColor)
-                .frame(width: 30)
-
-            VStack(alignment: .leading, spacing: 5) {
-                Text(info.name)
-                    .font(.headline)
-                    .lineLimit(1)
-                HStack(spacing: 6) {
-                    Label(String(format: s.points, info.pointCount), systemImage: "mappin.circle")
-                    if info.hasTimestamps, let start = info.startDate, let end = info.endDate {
-                        Text("·").foregroundStyle(.tertiary)
-                        Text(dateRangeText(start, end))
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            HStack(spacing: 6) {
-                if info.hasElevation {
-                    badgeLabel("mountain.2.fill", s.elevationBadge, .green)
-                }
-                if info.hasTimestamps {
-                    badgeLabel("clock", "GPS", .blue)
+    private var fileList: some View {
+        ScrollView {
+            VStack(spacing: 2) {
+                ForEach(files) { file in
+                    fileRow(file)
                 }
             }
+            .padding(6)
         }
-        .padding(14)
+        .frame(maxHeight: 180)
         .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
     }
 
-    private func badgeLabel(_ icon: String, _ label: String, _ color: Color) -> some View {
-        Label(label, systemImage: icon)
-            .font(.caption2.weight(.medium))
-            .foregroundStyle(color)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 4)
-            .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 6))
-    }
+    private func fileRow(_ file: ConversionFile) -> some View {
+        HStack(spacing: 8) {
+            statusIcon(file.status)
+                .frame(width: 16)
 
-    @ViewBuilder
-    private func statusBadge(_ st: AppStatus) -> some View {
-        HStack(spacing: 9) {
-            Image(systemName: st.isSuccess ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                .foregroundStyle(st.isSuccess ? .green : .red)
+            Text(file.displayName)
+                .font(.caption)
+                .lineLimit(1)
+                .truncationMode(.middle)
 
-            Group {
-                switch st {
-                case .success(let name):
-                    Text(s.successPrefix + "**\(name)**")
-                case .failure(let msg):
-                    Text(msg)
-                }
+            if let info = file.info {
+                Text("·")
+                    .foregroundStyle(.tertiary)
+                    .font(.caption)
+                Text(String(format: s.points, info.pointCount))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
-            .font(.caption)
-            .foregroundColor(st.isSuccess ? .primary : .red)
-            .lineLimit(1)
-            .truncationMode(.middle)
 
             Spacer()
 
-            Button { withAnimation { status = nil } } label: {
+            if case .failed(let msg) = file.status {
+                Text(msg)
+                    .font(.caption2)
+                    .foregroundStyle(.red)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: 130)
+            }
+
+            Button {
+                removeFile(file)
+            } label: {
+                Image(systemName: "xmark.circle")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+    }
+
+    @ViewBuilder
+    private func statusIcon(_ status: ConversionFile.FileStatus) -> some View {
+        switch status {
+        case .pending:
+            Image(systemName: "circle.dashed")
+                .foregroundStyle(.secondary).font(.caption)
+        case .loading:
+            ProgressView().scaleEffect(0.55)
+        case .ready:
+            Image(systemName: "checkmark.circle")
+                .foregroundStyle(Color.accentColor).font(.caption)
+        case .converting:
+            ProgressView().scaleEffect(0.55)
+        case .done:
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green).font(.caption)
+        case .failed:
+            Image(systemName: "exclamationmark.circle.fill")
+                .foregroundStyle(.red).font(.caption)
+        }
+    }
+
+    private var outputFolderRow: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "folder")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .frame(width: 20)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(s.outputFolderLabel)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                Text(outputDir.map { ($0.path as NSString).abbreviatingWithTildeInPath } ?? s.sameAsSource)
+                    .font(.caption)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .foregroundStyle(outputDir == nil ? .tertiary : .primary)
+            }
+
+            Spacer()
+
+            Button(s.chooseFolderButton) {
+                let panel = NSOpenPanel()
+                panel.canChooseFiles = false
+                panel.canChooseDirectories = true
+                panel.allowsMultipleSelection = false
+                panel.title = s.chooseFolderTitle
+                if panel.runModal() == .OK {
+                    outputDir = panel.url
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            if outputDir != nil {
+                Button {
+                    outputDir = nil
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(12)
+        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    @ViewBuilder
+    private func globalStatusBadge(_ st: GlobalStatus) -> some View {
+        HStack(spacing: 9) {
+            Image(systemName: st.isSuccess ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                .foregroundStyle(st.isSuccess ? .green : .orange)
+
+            Group {
+                switch st {
+                case .success(let n):
+                    Text(String(format: s.successMultiple, n))
+                case .partial(let ok, let total):
+                    Text(String(format: s.partialSuccess, ok, total))
+                }
+            }
+            .font(.caption)
+            .foregroundColor(.primary)
+
+            Spacer()
+
+            Button { withAnimation { globalStatus = nil } } label: {
                 Image(systemName: "xmark").font(.caption2)
             }
             .buttonStyle(.plain)
@@ -207,104 +289,161 @@ struct ContentView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(st.isSuccess ? Color.green.opacity(0.08) : Color.red.opacity(0.08))
+                .fill(st.isSuccess ? Color.green.opacity(0.08) : Color.orange.opacity(0.08))
         )
     }
 
     private var actionBar: some View {
         HStack {
-            if trackInfo != nil {
+            if !files.isEmpty {
                 Button(s.resetButton) { reset() }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
             }
             Spacer()
             Button {
-                convertFile()
+                convertAll()
             } label: {
-                if isConverting {
+                if isBatchConverting {
                     HStack(spacing: 8) {
                         ProgressView().scaleEffect(0.75).frame(width: 14, height: 14)
                         Text(s.convertingLabel)
                     }
                 } else {
-                    Label(s.convertButton, systemImage: "arrow.right.doc.on.clipboard")
+                    Label(
+                        readyCount > 0
+                            ? String(format: s.convertAllButton, readyCount)
+                            : s.convertButton,
+                        systemImage: "arrow.right.doc.on.clipboard"
+                    )
                 }
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .disabled(trackInfo == nil || isConverting)
+            .disabled(!canConvert)
         }
     }
 
     // MARK: - Actions
 
-    private func loadFile(url: URL) {
-        guard url.pathExtension.lowercased() == "gpx" else {
-            withAnimation { status = .failure(s.errorBadFile) }
-            return
+    private func addFiles(urls: [URL]) {
+        let existing = Set(files.map(\.url))
+        let newURLs = urls.filter { !existing.contains($0) }
+        guard !newURLs.isEmpty else { return }
+
+        if outputDir == nil, let first = newURLs.first {
+            outputDir = first.deletingLastPathComponent()
         }
-        sourceURL = url
-        withAnimation { status = nil }
+
+        let newFiles = newURLs.map { ConversionFile(url: $0) }
+        withAnimation { files.append(contentsOf: newFiles) }
+
+        for file in newFiles {
+            loadInfo(for: file)
+        }
+    }
+
+    private func loadInfo(for file: ConversionFile) {
+        guard let idx = files.firstIndex(where: { $0.id == file.id }) else { return }
+        files[idx].status = .loading
 
         Task {
             do {
-                let info = try GPXParser().parse(url: url)
+                let info = try GPXParser().parse(url: file.url)
                 await MainActor.run {
-                    withAnimation { trackInfo = info }
+                    if let i = files.firstIndex(where: { $0.id == file.id }) {
+                        files[i].info = info
+                        files[i].status = .ready
+                    }
                 }
             } catch {
+                let msg = error.localizedDescription
                 await MainActor.run {
-                    withAnimation {
-                        trackInfo = nil
-                        status = .failure(error.localizedDescription)
+                    if let i = files.firstIndex(where: { $0.id == file.id }) {
+                        files[i].status = .failed(msg)
                     }
                 }
             }
         }
     }
 
+    private func removeFile(_ file: ConversionFile) {
+        withAnimation { files.removeAll { $0.id == file.id } }
+    }
+
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
-        guard let provider = providers.first else { return false }
-        _ = provider.loadObject(ofClass: URL.self) { url, _ in
-            guard let url else { return }
-            DispatchQueue.main.async { loadFile(url: url) }
+        var urls: [URL] = []
+        let group = DispatchGroup()
+
+        for provider in providers {
+            group.enter()
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                if let url, url.pathExtension.lowercased() == "gpx" {
+                    urls.append(url)
+                }
+                group.leave()
+            }
+        }
+
+        group.notify(queue: .main) {
+            self.addFiles(urls: urls)
         }
         return true
     }
 
-    private func convertFile() {
-        guard let info = trackInfo, let src = sourceURL else { return }
-        isConverting = true
-        withAnimation { status = nil }
+    private func convertAll() {
+        let readyFiles = files.filter(\.isReady)
+        guard !readyFiles.isEmpty else { return }
+
+        let capturedOutputDir = outputDir
+        isBatchConverting = true
+        withAnimation { globalStatus = nil }
 
         Task {
-            do {
-                let content = try PLTConverter.convert(info)
-                await MainActor.run {
-                    let defaultName = src.deletingPathExtension().lastPathComponent
-                    let panel = NSSavePanel()
-                    panel.title = s.savePanelTitle
-                    panel.nameFieldStringValue = defaultName
-                    panel.allowedContentTypes = [UTType(filenameExtension: "plt") ?? .plainText]
-                    panel.directoryURL = src.deletingLastPathComponent()
+            var successCount = 0
 
-                    if panel.runModal() == .OK, let dest = panel.url {
-                        do {
-                            try content.write(to: dest, atomically: true, encoding: .utf8)
-                            withAnimation { status = .success(dest.lastPathComponent) }
-                        } catch {
-                            withAnimation {
-                                status = .failure(String(format: s.errorWrite, error.localizedDescription))
-                            }
+            for file in readyFiles {
+                guard let info = file.info else { continue }
+
+                await MainActor.run {
+                    if let i = files.firstIndex(where: { $0.id == file.id }) {
+                        files[i].status = .converting
+                    }
+                }
+
+                do {
+                    let content = try PLTConverter.convert(info)
+                    let destDir = capturedOutputDir ?? file.url.deletingLastPathComponent()
+                    let destName = file.url.deletingPathExtension().lastPathComponent + ".plt"
+                    let destURL = destDir.appendingPathComponent(destName)
+
+                    try content.write(to: destURL, atomically: true, encoding: .utf8)
+                    successCount += 1
+
+                    let name = destName
+                    await MainActor.run {
+                        if let i = files.firstIndex(where: { $0.id == file.id }) {
+                            files[i].status = .done(name)
                         }
                     }
-                    isConverting = false
+                } catch {
+                    let msg = error.localizedDescription
+                    await MainActor.run {
+                        if let i = files.firstIndex(where: { $0.id == file.id }) {
+                            files[i].status = .failed(msg)
+                        }
+                    }
                 }
-            } catch {
-                await MainActor.run {
-                    withAnimation { status = .failure(error.localizedDescription) }
-                    isConverting = false
+            }
+
+            let total = readyFiles.count
+            let finalCount = successCount
+            await MainActor.run {
+                isBatchConverting = false
+                withAnimation {
+                    globalStatus = finalCount == total
+                        ? .success(finalCount)
+                        : .partial(finalCount, total)
                 }
             }
         }
@@ -312,22 +451,10 @@ struct ContentView: View {
 
     private func reset() {
         withAnimation {
-            trackInfo = nil
-            sourceURL = nil
-            status = nil
+            files = []
+            outputDir = nil
+            globalStatus = nil
         }
-    }
-
-    // MARK: - Helpers
-
-    private func dateRangeText(_ start: Date, _ end: Date) -> String {
-        let df = DateFormatter()
-        df.dateStyle = .short
-        df.timeStyle = .none
-        if Calendar.current.isDate(start, inSameDayAs: end) {
-            return df.string(from: start)
-        }
-        return "\(df.string(from: start)) – \(df.string(from: end))"
     }
 }
 

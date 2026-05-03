@@ -4,16 +4,22 @@ struct AppStrings {
     let appSubtitle: String
     let dropZoneTitle: String
     let dropZoneSubtitle: String
-    let clickToChange: String
-    let points: String          // use String(format:) with %d
+    let filesLoaded: String       // use String(format:) with %d
+    let dropMoreFiles: String
+    let points: String            // use String(format:) with %d
     let elevationBadge: String
     let convertButton: String
+    let convertAllButton: String  // use String(format:) with %d
     let convertingLabel: String
     let resetButton: String
-    let savePanelTitle: String
-    let successPrefix: String   // "Converted: " – bold filename appended in UI
+    let outputFolderLabel: String
+    let sameAsSource: String
+    let chooseFolderButton: String
+    let chooseFolderTitle: String
+    let successMultiple: String   // use String(format:) with %d
+    let partialSuccess: String    // use String(format:) with %d, %d (ok, total)
     let errorBadFile: String
-    let errorWrite: String      // use String(format:) with %@
+    let errorWrite: String        // use String(format:) with %@
     let preferencesTitle: String
     let languageLabel: String
     let generalTab: String
@@ -25,16 +31,22 @@ extension AppLanguage {
         case .french:
             return AppStrings(
                 appSubtitle: "Convertisseur de traces GPS",
-                dropZoneTitle: "Déposez un fichier GPX ici",
+                dropZoneTitle: "Déposez des fichiers GPX ici",
                 dropZoneSubtitle: "ou cliquez pour sélectionner",
-                clickToChange: "Cliquer pour changer de fichier",
+                filesLoaded: "%d fichier(s) chargé(s)",
+                dropMoreFiles: "Déposer d'autres fichiers ou cliquer pour ajouter",
                 points: "%d points",
                 elevationBadge: "Alt.",
                 convertButton: "Convertir en PLT",
+                convertAllButton: "Convertir %d fichier(s)",
                 convertingLabel: "Conversion en cours…",
                 resetButton: "Réinitialiser",
-                savePanelTitle: "Enregistrer le fichier PLT",
-                successPrefix: "Converti : ",
+                outputFolderLabel: "Dossier de sortie",
+                sameAsSource: "Même dossier que la source",
+                chooseFolderButton: "Choisir…",
+                chooseFolderTitle: "Choisir le dossier de sortie",
+                successMultiple: "%d fichier(s) converti(s) avec succès",
+                partialSuccess: "%d/%d fichier(s) converti(s)",
                 errorBadFile: "Sélectionnez un fichier au format .gpx",
                 errorWrite: "Écriture impossible : %@",
                 preferencesTitle: "Préférences",
@@ -44,16 +56,22 @@ extension AppLanguage {
         case .english:
             return AppStrings(
                 appSubtitle: "GPS Track Converter",
-                dropZoneTitle: "Drop a GPX file here",
+                dropZoneTitle: "Drop GPX files here",
                 dropZoneSubtitle: "or click to select",
-                clickToChange: "Click to change file",
+                filesLoaded: "%d file(s) loaded",
+                dropMoreFiles: "Drop more files or click to add",
                 points: "%d points",
                 elevationBadge: "Elev.",
                 convertButton: "Convert to PLT",
+                convertAllButton: "Convert %d file(s)",
                 convertingLabel: "Converting…",
                 resetButton: "Reset",
-                savePanelTitle: "Save PLT File",
-                successPrefix: "Converted: ",
+                outputFolderLabel: "Output folder",
+                sameAsSource: "Same folder as source",
+                chooseFolderButton: "Choose…",
+                chooseFolderTitle: "Choose output folder",
+                successMultiple: "%d file(s) converted successfully",
+                partialSuccess: "%d/%d file(s) converted",
                 errorBadFile: "Please select a .gpx file",
                 errorWrite: "Write failed: %@",
                 preferencesTitle: "Preferences",
@@ -63,16 +81,22 @@ extension AppLanguage {
         case .spanish:
             return AppStrings(
                 appSubtitle: "Convertidor de trazas GPS",
-                dropZoneTitle: "Suelta un archivo GPX aquí",
+                dropZoneTitle: "Suelta archivos GPX aquí",
                 dropZoneSubtitle: "o haz clic para seleccionar",
-                clickToChange: "Clic para cambiar el archivo",
+                filesLoaded: "%d archivo(s) cargado(s)",
+                dropMoreFiles: "Suelta más archivos o haz clic para añadir",
                 points: "%d puntos",
                 elevationBadge: "Alt.",
                 convertButton: "Convertir a PLT",
+                convertAllButton: "Convertir %d archivo(s)",
                 convertingLabel: "Convirtiendo…",
                 resetButton: "Restablecer",
-                savePanelTitle: "Guardar archivo PLT",
-                successPrefix: "Convertido: ",
+                outputFolderLabel: "Carpeta de salida",
+                sameAsSource: "Misma carpeta que la fuente",
+                chooseFolderButton: "Elegir…",
+                chooseFolderTitle: "Elegir carpeta de salida",
+                successMultiple: "%d archivo(s) convertido(s) correctamente",
+                partialSuccess: "%d/%d archivo(s) convertido(s)",
                 errorBadFile: "Selecciona un archivo con formato .gpx",
                 errorWrite: "Error al escribir: %@",
                 preferencesTitle: "Preferencias",
@@ -82,16 +106,22 @@ extension AppLanguage {
         case .german:
             return AppStrings(
                 appSubtitle: "GPS-Strecken-Konverter",
-                dropZoneTitle: "GPX-Datei hier ablegen",
+                dropZoneTitle: "GPX-Dateien hier ablegen",
                 dropZoneSubtitle: "oder klicken zum Auswählen",
-                clickToChange: "Klicken um Datei zu wechseln",
+                filesLoaded: "%d Datei(en) geladen",
+                dropMoreFiles: "Weitere Dateien ablegen oder klicken zum Hinzufügen",
                 points: "%d Punkte",
                 elevationBadge: "Höhe",
                 convertButton: "In PLT konvertieren",
+                convertAllButton: "%d Datei(en) konvertieren",
                 convertingLabel: "Konvertierung läuft…",
                 resetButton: "Zurücksetzen",
-                savePanelTitle: "PLT-Datei speichern",
-                successPrefix: "Konvertiert: ",
+                outputFolderLabel: "Ausgabeordner",
+                sameAsSource: "Gleicher Ordner wie Quelle",
+                chooseFolderButton: "Wählen…",
+                chooseFolderTitle: "Ausgabeordner wählen",
+                successMultiple: "%d Datei(en) erfolgreich konvertiert",
+                partialSuccess: "%d/%d Datei(en) konvertiert",
                 errorBadFile: "Bitte eine .gpx-Datei auswählen",
                 errorWrite: "Schreiben fehlgeschlagen: %@",
                 preferencesTitle: "Einstellungen",

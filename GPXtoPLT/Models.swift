@@ -18,3 +18,25 @@ struct TrackInfo {
     var hasElevation: Bool { points.contains { $0.elevation != nil } }
     var hasTimestamps: Bool { points.contains { $0.timestamp != nil } }
 }
+
+struct ConversionFile: Identifiable {
+    let id = UUID()
+    let url: URL
+    var status: FileStatus = .pending
+    var info: TrackInfo?
+
+    enum FileStatus {
+        case pending
+        case loading
+        case ready
+        case converting
+        case done(String)   // nom du fichier de sortie
+        case failed(String) // message d'erreur
+    }
+
+    var displayName: String { url.lastPathComponent }
+    var isReady: Bool {
+        if case .ready = status { return true }
+        return false
+    }
+}
