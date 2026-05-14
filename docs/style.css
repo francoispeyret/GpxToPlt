@@ -72,7 +72,12 @@ nav {
 .bg-hero::before {
   content: "";
   position: absolute; z-index: 0; inset: -5%;
-  background-image: url(./background.png);
+  background-image: url(./background.avif);
+  background-image: image-set(
+    url(./background.avif) type("image/avif"),
+    url(./background.webp) type("image/webp"),
+    url(./background.png)  type("image/png")
+  );
   background-size: cover; background-position: center;
   filter: blur(10px) brightness(.30) saturate(1.4);
 }
