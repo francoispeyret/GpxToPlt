@@ -19,405 +19,14 @@
   <meta name="twitter:title" content="GPX → PLT · Convertisseur de traces GPS pour Mac">
   <meta name="twitter:description" content="Convertissez vos fichiers GPX au format PLT OziExplorer en un glisser-déposer. Application macOS native, Apple Silicon.">
   <meta name="twitter:image" content="https://francoispeyret.github.io/GpxToPlt/background.png">
+  <link rel="canonical" href="https://francoispeyret.github.io/GpxToPlt/">
+  <link rel="alternate" hreflang="fr" href="https://francoispeyret.github.io/GpxToPlt/">
+  <link rel="alternate" hreflang="en" href="https://francoispeyret.github.io/GpxToPlt/en.html">
+  <link rel="sitemap" type="application/xml" href="./sitemap.xml">
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <link rel="stylesheet" href="./style.css">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:        #ffffff;
-      --bg-subtle: #f5f5f7;
-      --text:      #1d1d1f;
-      --text-2:    #6e6e73;
-      --text-3:    #aeaeb2;
-      --text-4:    #ffffff;
-      --sep:       #d2d2d7;
-      --green:     #4a9e0f;
-      --gold:      #c49a2a;
-      --accent:    #4a9e0f;
-      --radius-sm: 10px;
-      --radius:    18px;
-      --radius-lg: 28px;
-      --shadow-sm: 0 2px 8px rgba(0,0,0,.06);
-      --shadow:    0 8px 32px rgba(0,0,0,.10);
-      --shadow-lg: 0 24px 60px rgba(0,0,0,.14);
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-
-    /* ── NAV ── */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 40px;
-      height: 52px;
-      background: rgba(255,255,255,.82);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      border-bottom: 1px solid rgba(0,0,0,.06);
-    }
-    .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      text-decoration: none;
-      color: var(--text);
-    }
-    .nav-icon {
-      width: 26px; height: 26px;
-      border-radius: 7px;
-      background: linear-gradient(160deg, #9dce12 0%, #c49a2a 100%);
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .nav-icon svg { width: 14px; height: 14px; fill: #fff; }
-    .nav-brand span { font-size: 15px; font-weight: 600; letter-spacing: -.3px; }
-    .nav-dl {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 16px;
-      border-radius: 980px;
-      background: var(--text);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 500;
-      text-decoration: none;
-      transition: opacity .15s;
-    }
-    .nav-dl:hover { opacity: .8; }
-    .nav-dl svg { width: 12px; height: 12px; fill: #fff; flex-shrink: 0; }
-
-    /* ── LANG SWITCH ── */
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .lang-switch {
-      display: flex;
-      align-items: center;
-      background: rgba(0,0,0,.06);
-      border-radius: 980px;
-      padding: 3px;
-    }
-    .lang-switch a {
-      padding: 3px 11px;
-      border-radius: 980px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: .4px;
-      text-decoration: none;
-      color: var(--text-2);
-      transition: color .15s;
-    }
-    .lang-switch a.active {
-      background: var(--bg);
-      color: var(--text);
-      box-shadow: 0 1px 4px rgba(0,0,0,.10);
-    }
-    .lang-switch a:not(.active):hover { color: var(--text); }
-
-    /* ── HERO ── */
-    .hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 88px 24px 72px;
-    }
-    .app-icon {
-      width: 120px; height: 120px;
-      border-radius: 27px;
-      background: linear-gradient(160deg, #9dce12 0%, #c49a2a 100%);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 12px 40px rgba(74,158,15,.30), 0 4px 12px rgba(0,0,0,.12);
-      margin-bottom: 32px;
-    }
-    .app-icon svg { width: 58px; height: 58px; fill: #fff; }
-
-    .hero h1 {
-      font-size: clamp(42px, 7vw, 64px);
-      font-weight: 700;
-      letter-spacing: -2px;
-      line-height: 1.05;
-      margin-bottom: 18px;
-      color: var(--text-4);
-    }
-    .hero h1 span {
-      color: var(--text);
-    }
-    .hero p {
-      font-size: 19px;
-      color: var(--text-4);
-      max-width: 500px;
-      line-height: 1.55;
-      margin-bottom: 36px;
-    }
-    .hero-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 28px;
-      border-radius: 980px;
-      background: var(--text);
-      color: #fff;
-      font-size: 16px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: transform .15s, box-shadow .15s;
-      box-shadow: var(--shadow);
-    }
-    .hero-cta:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
-    .hero-cta svg { width: 16px; height: 16px; fill: #fff; }
-    .hero-sub {
-      margin-top: 14px;
-      font-size: 12px;
-      color: var(--text-4);
-    }
-
-    /* ── PITCH ── */
-    .pitch {
-      display: flex;
-      justify-content: center;
-      padding: 0 24px 80px;
-    }
-    .pitch p {
-      max-width: 500px;
-      text-align: center;
-      font-size: 17px;
-      line-height: 1.65;
-      color: var(--text-4);
-    }
-    .pitch strong { color: var(--text); font-weight: 600; }
-
-    /* ── FEATURES ── */
-    .features {
-      background: var(--bg-subtle);
-      padding: 72px 40px;
-    }
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      max-width: 860px;
-      margin: 0 auto;
-    }
-    .feature-card {
-      background: var(--bg);
-      border-radius: var(--radius);
-      padding: 28px 24px;
-      box-shadow: var(--shadow-sm);
-    }
-    .feature-icon {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 18px;
-    }
-    .feature-icon svg { width: 22px; height: 22px; }
-    .feature-icon.green  { background: #eefad6; }
-    .feature-icon.green svg  { fill: #4a9e0f; }
-    .feature-icon.blue   { background: #e0edff; }
-    .feature-icon.blue svg   { fill: #2060d0; }
-    .feature-icon.orange { background: #fff2df; }
-    .feature-icon.orange svg { fill: #c26d00; }
-    .feature-card h3 {
-      font-size: 15px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      letter-spacing: -.2px;
-    }
-    .feature-card p {
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--text-2);
-    }
-
-    /* ── SCREENSHOT ── */
-    .screenshot-section {
-      padding: 88px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .screenshot-section img {
-      max-width: 100%;
-    }
-    .section-label {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-    .section-title {
-      font-size: clamp(28px, 4vw, 38px);
-      font-weight: 700;
-      letter-spacing: -1px;
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    .section-sub {
-      font-size: 16px;
-      color: var(--text-2);
-      text-align: center;
-      max-width: 480px;
-      margin-bottom: 52px;
-      line-height: 1.55;
-    }
-
-    /* ── STEPS ── */
-    .steps-section {
-      background: var(--bg-subtle);
-      padding: 80px 40px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      max-width: 760px;
-      width: 100%;
-      margin-top: 52px;
-    }
-    .step {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 28px 20px;
-      background: var(--bg);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      position: relative;
-    }
-    .step-num {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: var(--text);
-      color: #fff;
-      font-size: 14px;
-      font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 16px;
-      flex-shrink: 0;
-    }
-    .step h4 {
-      font-size: 15px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      letter-spacing: -.2px;
-    }
-    .step p {
-      font-size: 13px;
-      color: var(--text-2);
-      line-height: 1.6;
-    }
-
-    /* ── FORMATS ── */
-    .formats-section {
-      padding: 88px 40px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .formats-grid {
-      display: grid;
-      grid-template-columns: 1fr 56px 1fr;
-      align-items: center;
-      gap: 0;
-      max-width: 700px;
-      width: 100%;
-      margin-top: 52px;
-    }
-    .format-card {
-      border-radius: var(--radius);
-      border: 1px solid var(--sep);
-      padding: 28px 24px;
-    }
-    .format-badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: .3px;
-      margin-bottom: 14px;
-    }
-    .badge-gpx  { background: #e0edff; color: #2060d0; }
-    .badge-plt  { background: #eefad6; color: #4a9e0f; }
-    .format-card h4 { font-size: 16px; font-weight: 600; margin-bottom: 8px; letter-spacing: -.2px; }
-    .format-card p  { font-size: 13px; color: var(--text-2); line-height: 1.65; }
-    .arrow-mid {
-      display: flex; align-items: center; justify-content: center;
-    }
-    .arrow-mid svg { width: 28px; height: 28px; fill: var(--text-3); }
-
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--sep);
-      padding: 32px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    footer .brand { font-size: 14px; font-weight: 600; color: var(--text); }
-    footer .copy  { font-size: 13px; color: var(--text-3); }
-    footer .req   { font-size: 13px; color: var(--text-3); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 680px) {
-      nav { padding: 0 20px; }
-      .features { padding: 52px 20px; }
-      .features-grid { grid-template-columns: 1fr; }
-      .steps-section { padding: 60px 20px; }
-      .steps-grid { grid-template-columns: 1fr; }
-      .formats-section { padding: 60px 20px; }
-      .formats-grid {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-      }
-      .arrow-mid { transform: rotate(90deg); padding: 8px 0; }
-      footer { flex-direction: column; gap: 8px; text-align: center; }
-    }
-
-    .bg-hero {
-      position: relative;
-      overflow: hidden;
-    }
-    .bg-hero::before {
-      content: "";
-      position: absolute;
-      z-index: -1;
-      top: -2.5%;
-      left: -2.5%;
-      width: 105%;
-      height: 105%;
-      background-color: #222;
-      background-image: url(./background.png);
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-position: center bottom;
-      filter: blur(6px);
-    }
-  </style>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -434,11 +43,7 @@
     "image": "https://francoispeyret.github.io/GpxToPlt/icon.png",
     "screenshot": "https://francoispeyret.github.io/GpxToPlt/screenshot.png",
     "featureList": "Glisser-déposer, Conversion par lots, Traitement 100 % local, Interface multilingue",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "EUR"
-    }
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
   }
   </script>
 </head>
@@ -466,86 +71,93 @@
 <div class="bg-hero">
   <section class="hero">
     <div class="app-icon">
-      <img src="./icon.png" alt="GPX to PLT logo" width="124px">
+      <img src="./icon.png" alt="Icône GPX → PLT">
     </div>
-
-    <h1>Convertissez vos<br><span>traces GPS</span></h1>
-    <p>Transformez un fichier GPX en format PLT OziExplorer en un seul glisser-déposer. Simple, rapide, sans compte.</p>
-
-    <a class="hero-cta" href="./GPXtoPLT.zip" download>
-      <svg viewBox="0 0 20 20"><path d="M10 14l-5-5h3V3h4v6h3l-5 5zm-7 3h14v-2H3v2z"/></svg>
-      Télécharger — gratuit
-    </a>
+    <p class="hero-eyebrow">Application macOS gratuite</p>
+    <h1>Convertissez vos<br><em>traces GPS.</em></h1>
+    <p class="hero-desc">Transformez un fichier GPX en PLT OziExplorer en un glisser-déposer. Simple, rapide, sans compte.</p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="./GPXtoPLT.zip" download>
+        <svg viewBox="0 0 20 20"><path d="M10 14l-5-5h3V3h4v6h3l-5 5zm-7 3h14v-2H3v2z"/></svg>
+        Télécharger — gratuit
+      </a>
+      <a class="btn-secondary" href="https://github.com/francoispeyret/GpxToPlt" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2 0-.4-.5-1.6.2-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 4.7 18 5 18 5c.7 1.6.2 2.8.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>
+        Code source
+      </a>
+    </div>
     <p class="hero-sub">macOS 13 · Apple Silicon · Gratuit</p>
   </section>
 
-  <section class="pitch">
-    <p>
-      Vous avez une trace GPX et votre logiciel de cartographie attend du PLT&nbsp;?
-      <strong>GPX → PLT</strong> fait exactement ça — rien de plus, rien de moins.
-      Glissez votre fichier sur la fenêtre, vérifiez les informations de la trace
-      et exportez. Toute la conversion se fait en local, vos données ne quittent jamais votre Mac.
-    </p>
-  </section>
+  <div class="hero-visual">
+    <img src="screenshot.png" alt="Aperçu de l'application GPX → PLT">
+  </div>
 </div>
+
+<section class="pitch-section">
+  <p class="pitch-eyebrow fade-up">Pour quoi faire&nbsp;?</p>
+  <p class="fade-up d1">
+    Vous avez une trace GPX et votre logiciel de cartographie attend du PLT&nbsp;?
+    <strong>GPX → PLT</strong> fait exactement ça — rien de plus, rien de moins.
+    Glissez votre fichier sur la fenêtre, vérifiez la trace et exportez.
+    Toute la conversion se fait en local, vos données ne quittent jamais votre Mac.
+    L'application est entièrement <a href="https://github.com/francoispeyret/GpxToPlt" target="_blank" rel="noopener">open source et disponible sur GitHub</a>.
+  </p>
+</section>
+
 <section class="features">
-  <div class="features-grid">
-
-    <div class="feature-card">
-      <div class="feature-icon green">
-        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-      </div>
-      <h3>Glisser-déposer</h3>
-      <p>Faites glisser votre fichier <code>.gpx</code> directement sur la fenêtre. Ou utilisez le sélecteur de fichier classique.</p>
+  <div class="features-inner">
+    <div class="section-header fade-up">
+      <span class="section-eyebrow">Fonctionnalités</span>
+      <h2 class="section-title">Conçu pour aller vite.</h2>
     </div>
+    <div class="features-grid">
 
-    <div class="feature-card">
-      <div class="feature-icon blue">
-        <!-- precision icon -->
-        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm-1-5h2v2h-2zm0-8h2v6h-2z"/></svg>
+      <div class="feature-card fade-up d1">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        </div>
+        <h3>Glisser-déposer</h3>
+        <p>Faites glisser votre fichier <code>.gpx</code> directement sur la fenêtre. Ou utilisez le sélecteur de fichier classique.</p>
       </div>
-      <h3>Conversion fidèle</h3>
-      <p>Coordonnées WGS&nbsp;84, altitude en pieds, horodatage Delphi — chaque champ du format PLT est respecté à la virgule.</p>
-    </div>
 
-    <div class="feature-card">
-      <div class="feature-icon orange">
-        <!-- export icon -->
-        <svg viewBox="0 0 24 24"><path d="M6 2v6H2l10 10L22 8h-4V2H6zm0 15v5h12v-5H6z"/></svg>
+      <div class="feature-card fade-up d2">
+        <div class="feature-icon blue">
+          <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm-1-5h2v2h-2zm0-8h2v6h-2z"/></svg>
+        </div>
+        <h3>Conversion fidèle</h3>
+        <p>Coordonnées WGS&nbsp;84, altitude en pieds, horodatage Delphi — chaque champ du format PLT est respecté à la virgule.</p>
       </div>
-      <h3>Export immédiat</h3>
-      <p>Choisissez le dossier de destination et le nom du fichier. Le PLT est prêt en une fraction de seconde.</p>
-    </div>
 
+      <div class="feature-card fade-up d3">
+        <div class="feature-icon orange">
+          <svg viewBox="0 0 24 24"><path d="M6 2v6H2l10 10L22 8h-4V2H6zm0 15v5h12v-5H6z"/></svg>
+        </div>
+        <h3>Export immédiat</h3>
+        <p>Choisissez le dossier de destination et le nom du fichier. Le PLT est prêt en une fraction de seconde.</p>
+      </div>
+
+    </div>
   </div>
 </section>
 
-<section class="screenshot-section">
-  <p class="section-label">Aperçu</p>
-  <h2 class="section-title">Sobre et efficace</h2>
-  <p class="section-sub">Une seule fenêtre, une seule action. Pas de menus inutiles, pas de réglages superflus.</p>
-
-  <img src="screenshot.png" alt="Aperçu de l'app">
-</section>
-
-<!-- ════════════════════════════════ STEPS -->
 <section class="steps-section">
-  <p class="section-label">Utilisation</p>
-  <h2 class="section-title">En trois gestes</h2>
+  <span class="section-eyebrow fade-up">Utilisation</span>
+  <h2 class="section-title fade-up d1">En trois gestes.</h2>
 
   <div class="steps-grid">
-    <div class="step">
-      <div class="step-num">1</div>
+    <div class="step fade-up d1">
+      <div class="step-num">01</div>
       <h4>Glissez le fichier</h4>
       <p>Déposez votre fichier <code>.gpx</code> sur la zone d'import ou cliquez pour parcourir vos dossiers.</p>
     </div>
-    <div class="step">
-      <div class="step-num">2</div>
+    <div class="step fade-up d2">
+      <div class="step-num">02</div>
       <h4>Vérifiez la trace</h4>
       <p>L'app affiche instantanément le nom de la trace, le nombre de points et la plage de dates.</p>
     </div>
-    <div class="step">
-      <div class="step-num">3</div>
+    <div class="step fade-up d3">
+      <div class="step-num">03</div>
       <h4>Exportez en PLT</h4>
       <p>Cliquez sur <strong>Convertir en PLT</strong> et choisissez où enregistrer votre fichier.</p>
     </div>
@@ -553,22 +165,23 @@
 </section>
 
 <section class="formats-section">
-  <p class="section-label">Formats</p>
-  <h2 class="section-title">GPX et PLT, qu'est-ce que c'est&nbsp;?</h2>
-  <p class="section-sub">Deux standards GPS incontournables, enfin réconciliés.</p>
+  <span class="section-eyebrow fade-up">Formats</span>
+  <h2 class="section-title fade-up d1">GPX et PLT, qu'est-ce que c'est&nbsp;?</h2>
+  <p class="section-sub fade-up d2">
+    Deux standards GPS incontournables, enfin réconciliés. —
+    <a href="./en.html" style="color:var(--accent);font-weight:600;text-decoration:none;">Read in English →</a>
+  </p>
 
   <div class="formats-grid">
-    <div class="format-card">
+    <div class="format-card fade-up">
       <span class="format-badge badge-gpx">GPX</span>
       <h4>GPS Exchange Format</h4>
       <p>Format ouvert basé sur XML, produit par la quasi-totalité des appareils GPS modernes, montres de sport et applications mobiles (Garmin, Strava, Komoot…). Il stocke les coordonnées, l'altitude en mètres et les horodatages ISO&nbsp;8601.</p>
     </div>
-
     <div class="arrow-mid">
       <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg>
     </div>
-
-    <div class="format-card">
+    <div class="format-card fade-up d2">
       <span class="format-badge badge-plt">PLT</span>
       <h4>OziExplorer Track File</h4>
       <p>Format texte utilisé par OziExplorer et de nombreux logiciels de cartographie embarquée. Il encode les coordonnées WGS&nbsp;84, l'altitude en pieds et la date sous forme de timestamp Delphi (jours depuis le 30&nbsp;déc.&nbsp;1899).</p>
@@ -576,11 +189,37 @@
   </div>
 </section>
 
+<section class="cta-section">
+  <h2 class="fade-up">Prêt à convertir&nbsp;?</h2>
+  <p class="fade-up d1">Téléchargez GPX → PLT gratuitement et convertissez vos traces GPS en quelques secondes.</p>
+  <a class="btn-cta fade-up d2" href="./GPXtoPLT.zip" download>
+    <svg viewBox="0 0 20 20"><path d="M10 14l-5-5h3V3h4v6h3l-5 5zm-7 3h14v-2H3v2z"/></svg>
+    Télécharger — gratuit
+  </a>
+  <p class="cta-meta fade-up d3">macOS 13 ou plus récent · Apple Silicon</p>
+  <a class="cta-gh fade-up" href="https://github.com/francoispeyret/GpxToPlt" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2 0-.4-.5-1.6.2-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 4.7 18 5 18 5c.7 1.6.2 2.8.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>
+    Voir le code source sur GitHub
+  </a>
+</section>
+
 <footer>
   <span class="brand">GPX → PLT</span>
   <span class="req">Requiert macOS&nbsp;13 ou plus récent · Apple Silicon</span>
-  <span class="copy">© 2026</span>
+  <span class="copy">
+    <a href="https://github.com/francoispeyret/GpxToPlt" target="_blank" rel="noopener">GitHub</a>
+    © 2026
+  </span>
 </footer>
+
+<script>
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+    });
+  }, { threshold: .1 });
+  document.querySelectorAll('.fade-up').forEach(el => io.observe(el));
+</script>
 
 </body>
 </html>
